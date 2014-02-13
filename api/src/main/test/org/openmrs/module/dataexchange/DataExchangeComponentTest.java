@@ -35,7 +35,7 @@ public class DataExchangeComponentTest extends BaseModuleContextSensitiveTest {
 		try {
 			conceptsFile = File.createTempFile("concepts", ".xml");
 			
-			dataExporter.exportConcepts(conceptsFile.getPath(), new HashSet<Integer>(Arrays.asList(5089)));
+			dataExporter.exportConcepts(conceptsFile.getPath(), new HashSet<Integer>(Arrays.asList(23, 5089)));
 			
 			dataImporter.importData(conceptsFile.getPath());
 		} finally {

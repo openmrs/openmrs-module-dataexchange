@@ -33,7 +33,7 @@ import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.ReplacementTable;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.hibernate.SessionFactory;
-import org.openmrs.module.dataexchange.Table.Reference;
+import org.openmrs.module.dataexchange.TableDefinition.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,12 +48,12 @@ public class DataExporter {
 	public void exportConcepts(String filePath, Set<Integer> ids) throws IOException {
 		DatabaseConnection connection = getConnection();
 		
-		Table concept = buildConceptTable();
+		TableDefinition conceptTableDefinition = buildConceptTableDefinition();
 		
 		List<ITable> tables = new ArrayList<ITable>();
 		
 		try {
-			addTable(connection, tables, concept, concept.getPrimaryKey(), ids);
+			addTable(connection, tables, conceptTableDefinition, conceptTableDefinition.getPrimaryKey(), ids);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -81,43 +81,43 @@ public class DataExporter {
 		}
 	}
 
-	private Table buildConceptTable() {
-		Table conceptDatatype = new Table.Builder("concept_datatype").build();
-		Table conceptClass = new Table.Builder("concept_class").build();
-		Table concept = new Table.Builder("concept").addFK("datatype_id", conceptDatatype)
+	private TableDefinition buildConceptTableDefinition() {
+		TableDefinition conceptDatatype = new TableDefinition.Builder("concept_datatype").build();
+		TableDefinition conceptClass = new TableDefinition.Builder("concept_class").build();
+		TableDefinition concept = new TableDefinition.Builder("concept").addFK("datatype_id", conceptDatatype)
 				.addFK("class_id", conceptClass).build();
 		
-		new Table.Builder("concept_name").addReferenceAndFK("concept_id", concept).build();
-		new Table.Builder("concept_description").addReferenceAndFK("concept_id", concept).build();
+		new TableDefinition.Builder("concept_name").addReferenceAndFK("concept_id", concept).build();
+		new TableDefinition.Builder("concept_description").addReferenceAndFK("concept_id", concept).build();
 		
-		new Table.Builder("concept_set").addReferenceAndFK("concept_id", concept).build();
+		new TableDefinition.Builder("concept_set").addReferenceAndFK("concept_id", concept).build();
 		
-		Table drug = new Table.Builder("drug").addReferenceAndFK("concept_id", concept).addFK("dosage_form", concept)
+		TableDefinition drug = new TableDefinition.Builder("drug").addReferenceAndFK("concept_id", concept).addFK("dosage_form", concept)
 				.addFK("route", concept).build();
 		
-		new Table.Builder("concept_answer").addReferenceAndFK("concept_id", concept)
+		new TableDefinition.Builder("concept_answer").addReferenceAndFK("concept_id", concept)
 				.addFK("answer_concept", concept).addFK("answer_drug", drug).build();
 		
-		Table conceptSource = new Table.Builder("concept_reference_source").addPK("concept_source_id").build();
+		TableDefinition conceptSource = new TableDefinition.Builder("concept_reference_source").addPK("concept_source_id").build();
 		
-		Table conceptReferenceTerm = new Table.Builder("concept_reference_term")
+		TableDefinition conceptReferenceTerm = new TableDefinition.Builder("concept_reference_term")
 				.addFK("concept_source_id", conceptSource).build();
 		
-		Table conceptMapType = new Table.Builder("concept_map_type").build();
+		TableDefinition conceptMapType = new TableDefinition.Builder("concept_map_type").build();
 		
-		new Table.Builder("concept_reference_term_map")
+		new TableDefinition.Builder("concept_reference_term_map")
 			.addReferenceAndFK("term_a_id", conceptReferenceTerm).addReferenceAndFK("term_b_id", conceptReferenceTerm)
 			.addFK("a_is_to_b_id", conceptMapType).build();
 		
-		new Table.Builder("concept_reference_map").addPK("concept_map_id")
+		new TableDefinition.Builder("concept_reference_map").addPK("concept_map_id")
 				.addFK("concept_map_type_id", conceptMapType).addReferenceAndFK("concept_id", concept)
 				.addFK("concept_reference_term_id", conceptReferenceTerm).build();
 		return concept;
 	}
 
 	private void addTable(DatabaseConnection connection,
-			List<ITable> tables, Table table, String key, Set<Integer> ids) throws SQLException, DataSetException {
-		StringBuilder select = new StringBuilder("select * from " + table.getName() + " where " + key + " in (?");
+			List<ITable> tables, TableDefinition tableDefinition, String key, Set<Integer> ids) throws SQLException, DataSetException {
+		StringBuilder select = new StringBuilder("select * from " + tableDefinition.getTableName() + " where " + key + " in (?");
 		for (int i = 1; i < ids.size(); i++) {
 			select.append(", ?");
 		}
@@ -131,7 +131,7 @@ public class DataExporter {
 			index++;
 		}
 		
-		ITable resultTable = connection.createTable(table.getName(), selectQuery);
+		ITable resultTable = connection.createTable(tableDefinition.getTableName(), selectQuery);
 		
 		if (resultTable.getRowCount() == 0) {
 			return;
@@ -140,17 +140,17 @@ public class DataExporter {
 		Set<Integer> notFetchedIds = new HashSet<Integer>();
 		
 		for (int i = 0; i < resultTable.getRowCount(); i++) {
-			Integer id = (Integer) resultTable.getValue(i, table.getPrimaryKey());
-			if (table.addFetchedId(id)) {
+			Integer id = (Integer) resultTable.getValue(i, tableDefinition.getPrimaryKey());
+			if (tableDefinition.addFetchedId(id)) {
 				notFetchedIds.add(id);
 			}
 		}
 		
-		for (Entry<String, Table> fk : table.getForeignKeys().entrySet()) {
+		for (Entry<String, TableDefinition> fk : tableDefinition.getForeignKeys().entrySet()) {
 			Set<Integer> notFetchedForeignIds = new HashSet<Integer>();
 			
 			for (int i = 0; i < resultTable.getRowCount(); i++) {
-				Integer id = (Integer) resultTable.getValue(i, table.getPrimaryKey());
+				Integer id = (Integer) resultTable.getValue(i, tableDefinition.getPrimaryKey());
 				if (!notFetchedIds.contains(id)) {
 					continue;
 				}
@@ -173,7 +173,7 @@ public class DataExporter {
 		tables.add(replacementTable);
 		
 		if (!notFetchedIds.isEmpty()) {
-			for (Reference reference : table.getReferences()) {
+			for (Reference reference : tableDefinition.getReferences()) {
 				addTable(connection, tables, reference.getTable(), reference.getForeingKey(), notFetchedIds);
 			}
 		}

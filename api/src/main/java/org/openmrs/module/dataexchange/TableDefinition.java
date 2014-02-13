@@ -22,11 +22,11 @@ import java.util.Set;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-public class Table {
+public class TableDefinition {
 	
-	private final String name;
+	private final String tableName;
 	
-	private final Map<String, Table> foreignKeys = new HashMap<String, Table>();
+	private final Map<String, TableDefinition> foreignKeys = new HashMap<String, TableDefinition>();
 	
 	private final Set<String> primaryKeys = new HashSet<String>();
 	
@@ -34,15 +34,15 @@ public class Table {
 	
 	private final Set<Integer> fetchedIds = new HashSet<Integer>();
 	
-	private Table(String name) {
-		this.name = name;
+	private TableDefinition(String tableName) {
+		this.tableName = tableName;
 	}
 	
-	public String getName() {
-		return name;
+	public String getTableName() {
+		return tableName;
 	}
 	
-	public Map<String, Table> getForeignKeys() {
+	public Map<String, TableDefinition> getForeignKeys() {
 		return Collections.unmodifiableMap(foreignKeys);
 	}
 	
@@ -74,15 +74,15 @@ public class Table {
 	
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return tableName.hashCode();
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
-		} else if (obj instanceof Table) {
-			return name.equals(((Table) obj).name);
+		} else if (obj instanceof TableDefinition) {
+			return tableName.equals(((TableDefinition) obj).tableName);
 		} else {
 			return false;
 		}
@@ -90,16 +90,16 @@ public class Table {
 	
 	@Override
 	public String toString() {
-		return name;
+		return tableName;
 	}
 	
 	public static class Reference {
 		
 		private final String foreingKey;
 		
-		private final Table table;
+		private final TableDefinition table;
 		
-		public Reference(String foreignKey, Table table) {
+		public Reference(String foreignKey, TableDefinition table) {
 			this.foreingKey = foreignKey;
 			this.table = table;
 		}
@@ -108,7 +108,7 @@ public class Table {
 			return foreingKey;
 		}
 
-		public Table getTable() {
+		public TableDefinition getTable() {
 			return table;
 		}
 		
@@ -132,19 +132,19 @@ public class Table {
 	
 	public static class Builder {
 		
-		private final Table table;
+		private final TableDefinition table;
 		
 		public Builder(String tableName) {
-			table = new Table(tableName);
+			table = new TableDefinition(tableName);
 		}
 		
-		public Builder addFK(String column, Table table) {
+		public Builder addFK(String column, TableDefinition table) {
 			this.table.foreignKeys.put(column, table);
 			
 			return this;
 		}
 		
-		public Builder addReferenceAndFK(String column, Table table) {
+		public Builder addReferenceAndFK(String column, TableDefinition table) {
 			this.table.foreignKeys.put(column, table);
 			table.references.add(new Reference(column, this.table));
 			
@@ -157,9 +157,9 @@ public class Table {
 			return this;
 		}
 		
-		public Table build() {
+		public TableDefinition build() {
 			if (table.primaryKeys.isEmpty()) {
-				table.primaryKeys.add(table.name + "_id");
+				table.primaryKeys.add(table.tableName + "_id");
 			}
 			
 			return table;

@@ -117,21 +117,21 @@ public class DataExporter {
 
 	private void addTable(DatabaseConnection connection,
 			List<ITable> tables, Table table, String key, Set<Integer> ids) throws SQLException, DataSetException {
-		StringBuilder selectConcept = new StringBuilder("select * from " + table.getName() + " where " + key + " in (?");
+		StringBuilder select = new StringBuilder("select * from " + table.getName() + " where " + key + " in (?");
 		for (int i = 1; i < ids.size(); i++) {
-			selectConcept.append(", ?");
+			select.append(", ?");
 		}
-		selectConcept.append(")");
+		select.append(")");
 		
-		PreparedStatement selectConceptQuery = connection.getConnection().prepareStatement(selectConcept.toString());
+		PreparedStatement selectQuery = connection.getConnection().prepareStatement(select.toString());
 		
 		int index = 1;
 		for (Integer id: ids) {
-			selectConceptQuery.setInt(index, id);
+			selectQuery.setInt(index, id);
 			index++;
 		}
 		
-		ITable resultTable = connection.createTable(table.getName(), selectConceptQuery);
+		ITable resultTable = connection.createTable(table.getName(), selectQuery);
 		
 		if (resultTable.getRowCount() == 0) {
 			return;

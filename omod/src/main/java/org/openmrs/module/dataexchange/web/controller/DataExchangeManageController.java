@@ -13,24 +13,77 @@
  */
 package org.openmrs.module.dataexchange.web.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.dataexchange.DataExporter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * The main controller.
  */
 @Controller
+@RequestMapping(value = "/module/dataexchange/manage")
 public class  DataExchangeManageController {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
-	@RequestMapping(value = "/module/dataexchange/manage", method = RequestMethod.GET)
+	@Autowired
+	DataExporter dataExporter;
+	
+	@RequestMapping(method = RequestMethod.GET)
 	public void manage(ModelMap model) {
 		model.addAttribute("user", Context.getAuthenticatedUser());
+	}
+	
+	@RequestMapping(method = RequestMethod.POST)
+	public ResponseEntity<String> exportConcepts(@RequestParam("conceptIds") String conceptIds) throws IOException {
+		
+		String[] splitConceptIds = conceptIds.split(",");
+		Set<Integer> ids = new HashSet<Integer>();
+		
+		for (String conceptId : splitConceptIds) {
+			ids.add(Integer.valueOf(conceptId));
+		}
+		
+		File tempFile = null;
+		FileInputStream tempIN = null;
+		String xml;
+		try {
+			tempFile = File.createTempFile("concepts", ".xml");
+			
+			dataExporter.exportConcepts(tempFile.getPath(), ids);
+			
+			tempIN = new FileInputStream(tempFile);
+			
+			xml = IOUtils.toString(tempIN, "UTF-8");
+			
+			tempIN.close();
+		} finally {
+			IOUtils.closeQuietly(tempIN);
+			
+			if (tempFile != null) {
+				tempFile.delete();
+			}
+		}
+		
+		HttpHeaders responseHeaders = new HttpHeaders();
+		responseHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_XML);
+		return new ResponseEntity<String>(xml, responseHeaders, HttpStatus.CREATED);
 	}
 }

@@ -22,9 +22,9 @@
 	</organization>
 
 	<scm>
-		<connection>scm:git:https://github.com/rkorytkowski/openmrs-module-dataexchange</connection>
-		<developerConnection>scm:git:https://github.com/rkorytkowski/openmrs-module-dataexchange</developerConnection>
-		<url>https://github.com/rkorytkowski/openmrs-module-dataexchange</url>
+		<connection>scm:git:https://github.com/openmrs/openmrs-module-dataexchange</connection>
+		<developerConnection>scm:git:https://github.com/openmrs/openmrs-module-dataexchange</developerConnection>
+		<url>https://github.com/openmrs/openmrs-module-dataexchange</url>
 	</scm>
 
 	<modules>

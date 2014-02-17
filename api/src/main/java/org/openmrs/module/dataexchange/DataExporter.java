@@ -90,7 +90,8 @@ public class DataExporter {
 		new TableDefinition.Builder("concept_name").addReferenceAndFK("concept_id", concept).build();
 		new TableDefinition.Builder("concept_description").addReferenceAndFK("concept_id", concept).build();
 		
-		new TableDefinition.Builder("concept_set").addReferenceAndFK("concept_id", concept).build();
+		new TableDefinition.Builder("concept_set").addFK("concept_id", concept)
+				.addReferenceAndFK("concept_set", concept).build();
 		
 		TableDefinition drug = new TableDefinition.Builder("drug").addReferenceAndFK("concept_id", concept).addFK("dosage_form", concept)
 				.addFK("route", concept).build();
@@ -117,6 +118,12 @@ public class DataExporter {
 
 	private void addTable(DatabaseConnection connection,
 			List<ITable> tables, TableDefinition tableDefinition, String key, Set<Integer> ids) throws SQLException, DataSetException {
+		ids.remove(null);
+		
+		if (ids.isEmpty()) {
+			return;
+		}
+		
 		StringBuilder select = new StringBuilder("select * from " + tableDefinition.getTableName() + " where " + key + " in (?");
 		for (int i = 1; i < ids.size(); i++) {
 			select.append(", ?");

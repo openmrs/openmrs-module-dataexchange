@@ -15,43 +15,49 @@ package org.openmrs.module.dataexchange.web.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.api.context.Context;
 import org.openmrs.module.dataexchange.DataExporter;
+import org.openmrs.module.dataexchange.DataImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * The main controller.
  */
 @Controller
-@RequestMapping(value = "/module/dataexchange/manage")
-public class  DataExchangeManageController {
+@RequestMapping(value = "/module/dataexchange")
+public class  DataExchangeController {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
 	@Autowired
 	DataExporter dataExporter;
 	
-	@RequestMapping(method = RequestMethod.GET)
-	public void manage(ModelMap model) {
-		model.addAttribute("user", Context.getAuthenticatedUser());
+	@Autowired
+	DataImporter dataImporter;
+	
+	@RequestMapping(value = "/export", method = RequestMethod.GET)
+	public void export() {
 	}
 	
-	@RequestMapping(method = RequestMethod.POST)
+	@RequestMapping(value = "/export", method = RequestMethod.POST)
 	public ResponseEntity<String> exportConcepts(@RequestParam("conceptIds") String conceptIds) throws IOException {
 		
 		String[] splitConceptIds = conceptIds.split(",");
@@ -85,5 +91,30 @@ public class  DataExchangeManageController {
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_XML);
 		return new ResponseEntity<String>(xml, responseHeaders, HttpStatus.CREATED);
+	}
+	
+	@RequestMapping(value = "/import", method = RequestMethod.GET)
+	public void importData() {
+	}
+	
+	@RequestMapping(value = "/import", method = RequestMethod.POST)
+	public void importData(@RequestParam("file") MultipartFile file, Model model) throws IOException {
+		Writer writer = null;
+		File tempFile = null;
+		try {
+			tempFile = File.createTempFile("concepts", ".xml");
+			writer = new OutputStreamWriter(new FileOutputStream(tempFile), "UTF-8");
+			IOUtils.copy(file.getInputStream(), writer, "UTF-8");
+			writer.close();
+			
+			dataImporter.importData(tempFile.getPath());
+		} finally {
+			IOUtils.closeQuietly(writer);
+			if (tempFile != null) {
+				tempFile.delete();
+			}
+		}
+		
+		model.addAttribute("success", true);
 	}
 }

@@ -5,10 +5,16 @@
 				code="admin.title.short" /></a></li>
 
 	<li
-		<c:if test='<%= request.getRequestURI().contains("/manage") %>'>class="active"</c:if>>
+		<c:if test='<%= request.getRequestURI().contains("/export") %>'>class="active"</c:if>>
 		<a
-		href="${pageContext.request.contextPath}/module/dataexchange/manage.form"><spring:message
-				code="dataexchange.manage" /></a>
+		href="${pageContext.request.contextPath}/module/dataexchange/export.form"><spring:message
+				code="dataexchange.export" /></a>
+	</li>
+	<li
+		<c:if test='<%= request.getRequestURI().contains("/import") %>'>class="active"</c:if>>
+		<a
+		href="${pageContext.request.contextPath}/module/dataexchange/import.form"><spring:message
+				code="dataexchange.import" /></a>
 	</li>
 	
 	<!-- Add further links here -->

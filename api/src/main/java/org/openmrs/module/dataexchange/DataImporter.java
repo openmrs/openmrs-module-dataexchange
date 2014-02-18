@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 
 import org.apache.commons.io.IOUtils;
 import org.dbunit.database.DatabaseConnection;
+import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
@@ -40,15 +41,18 @@ public class DataImporter {
 		
 		InputStream in = OpenmrsClassLoader.getInstance().getResourceAsStream(filePath);
 		try {
-			FlatXmlDataSet dataset;
+			FlatXmlDataSet dataSet;
 			
 			if (in != null) {
-				dataset = new FlatXmlDataSetBuilder().build(new InputStreamReader(in, "UTF-8"));
+				dataSet = new FlatXmlDataSetBuilder().setColumnSensing(true).build(new InputStreamReader(in, "UTF-8"));
 			} else {
-				dataset = new FlatXmlDataSetBuilder().build(new File(filePath));
+				dataSet = new FlatXmlDataSetBuilder().setColumnSensing(true).build(new File(filePath));
 			}
-		
-			DatabaseOperation.REFRESH.execute(connection, dataset);
+			
+			ReplacementDataSet replacementDataSet = new ReplacementDataSet(dataSet);
+			replacementDataSet.addReplacementObject("[NULL]", null);
+			
+			DatabaseOperation.REFRESH.execute(connection, replacementDataSet);
 			
 			if (in != null) {
 				in.close();

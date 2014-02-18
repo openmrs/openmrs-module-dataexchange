@@ -32,6 +32,8 @@ public class TableDefinition {
 	
 	private final Set<Reference> references = new HashSet<Reference>();
 	
+	private final Set<String> excludedColumns = new HashSet<String>();
+	
 	private final Set<Integer> fetchedIds = new HashSet<Integer>();
 	
 	private TableDefinition(String tableName) {
@@ -70,6 +72,10 @@ public class TableDefinition {
 	
 	public boolean addFetchedId(Integer id) {
 		return fetchedIds.add(id);
+	}
+	
+	public Set<String> getExcludedColumns() {
+		return Collections.unmodifiableSet(excludedColumns);
 	}
 	
 	@Override
@@ -153,6 +159,12 @@ public class TableDefinition {
 		
 		public Builder addPK(String column) {
 			table.primaryKeys.add(column);
+			
+			return this;
+		}
+		
+		public Builder excludeColumn(String column) {
+			table.excludedColumns.add(column);
 			
 			return this;
 		}

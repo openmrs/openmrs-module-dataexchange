@@ -31,6 +31,7 @@ import org.dbunit.dataset.CompositeDataSet;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.ReplacementTable;
+import org.dbunit.dataset.filter.DefaultColumnFilter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.hibernate.SessionFactory;
 import org.openmrs.module.dataexchange.TableDefinition.Reference;
@@ -85,7 +86,13 @@ public class DataExporter {
 		TableDefinition conceptDatatype = new TableDefinition.Builder("concept_datatype").build();
 		TableDefinition conceptClass = new TableDefinition.Builder("concept_class").build();
 		TableDefinition concept = new TableDefinition.Builder("concept").addFK("datatype_id", conceptDatatype)
-				.addFK("class_id", conceptClass).build();
+				.addFK("class_id", conceptClass).excludeColumn("short_name").excludeColumn("description").build();
+		
+		new TableDefinition.Builder("concept_numeric").addPK("concept_id")
+				.addReferenceAndFK("concept_id", concept).build();
+		
+		new TableDefinition.Builder("concept_complex").addPK("concept_id")
+				.addReferenceAndFK("concept_id", concept);
 		
 		new TableDefinition.Builder("concept_name").addReferenceAndFK("concept_id", concept).build();
 		new TableDefinition.Builder("concept_description").addReferenceAndFK("concept_id", concept).build();
@@ -177,7 +184,15 @@ public class DataExporter {
 		replacementTable.addReplacementObject("creator", 1);
 		replacementTable.addReplacementObject("retired_by", 1);
 		replacementTable.addReplacementObject("changed_by", 1);
-		tables.add(replacementTable);
+		
+		resultTable = replacementTable;
+		
+		if (!tableDefinition.getExcludedColumns().isEmpty()) {
+			resultTable = DefaultColumnFilter.excludedColumnsTable(resultTable, 
+					tableDefinition.getExcludedColumns().toArray(new String[0]));
+		}
+		
+		tables.add(resultTable);
 		
 		if (!notFetchedIds.isEmpty()) {
 			for (Reference reference : tableDefinition.getReferences()) {

@@ -23,6 +23,7 @@ import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 import org.hibernate.SessionFactory;
+import org.openmrs.util.OpenmrsClassLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +38,7 @@ public class DataImporter {
 	public void importData(String filePath) {
 		DatabaseConnection connection = getConnection();
 		
-		InputStream in = getClass().getClassLoader().getResourceAsStream(filePath);
+		InputStream in = OpenmrsClassLoader.getInstance().getResourceAsStream(filePath);
 		try {
 			FlatXmlDataSet dataset;
 			

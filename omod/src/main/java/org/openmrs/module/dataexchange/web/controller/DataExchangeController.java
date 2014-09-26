@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.module.dataexchange.DataExporter;
@@ -60,11 +61,13 @@ public class  DataExchangeController {
 	@RequestMapping(value = "/export", method = RequestMethod.POST)
 	public ResponseEntity<String> exportConcepts(@RequestParam("conceptIds") String conceptIds) throws IOException {
 		
-		String[] splitConceptIds = conceptIds.split(",");
+		String[] splitConceptIds = conceptIds.split("\\s+");
 		Set<Integer> ids = new HashSet<Integer>();
 		
 		for (String conceptId : splitConceptIds) {
-			ids.add(Integer.valueOf(conceptId));
+			if (!StringUtils.isBlank(conceptId)) {
+				ids.add(Integer.valueOf(conceptId));
+			}
 		}
 		
 		File tempFile = null;
@@ -73,7 +76,11 @@ public class  DataExchangeController {
 		try {
 			tempFile = File.createTempFile("concepts", ".xml");
 			
-			dataExporter.exportConcepts(tempFile.getPath(), ids);
+			if (ids.isEmpty()) {
+				dataExporter.exportAllConcepts(tempFile.getPath());
+			} else {
+				dataExporter.exportConcepts(tempFile.getPath(), ids);
+			}
 			
 			tempIN = new FileInputStream(tempFile);
 			

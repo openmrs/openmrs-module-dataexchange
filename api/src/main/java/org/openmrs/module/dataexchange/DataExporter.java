@@ -17,9 +17,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -30,7 +32,6 @@ import org.dbunit.database.DatabaseConnection;
 import org.dbunit.dataset.CompositeDataSet;
 import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
-import org.dbunit.dataset.ReplacementTable;
 import org.dbunit.dataset.filter.DefaultColumnFilter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.hibernate.SessionFactory;
@@ -71,6 +72,26 @@ public class DataExporter {
 		} finally {
 			IOUtils.closeQuietly(writer);
 		}
+	}
+	
+	@Transactional
+	public void exportAllConcepts(String filePath) throws IOException {
+		DatabaseConnection connection = getConnection();
+		
+		Set<Integer> conceptIds = new LinkedHashSet<Integer>();
+		try {
+	        PreparedStatement selectQuery = connection.getConnection().prepareStatement("select concept_id from concept");
+	        ResultSet resultSet = selectQuery.executeQuery();
+	        while (resultSet.next()) {
+	            int id = resultSet.getInt(1);
+	            conceptIds.add(id);
+            }
+        }
+        catch (SQLException e) {
+	        throw new RuntimeException(e);
+        }
+		
+		exportConcepts(filePath, conceptIds);
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -131,7 +152,7 @@ public class DataExporter {
 			return;
 		}
 		
-		StringBuilder select = new StringBuilder("select * from " + tableDefinition.getTableName() + " where " + key + " in (?");
+		StringBuilder select = new StringBuilder("select * from ").append(tableDefinition.getTableName()).append(" where ").append(key).append(" in (?");
 		for (int i = 1; i < ids.size(); i++) {
 			select.append(", ?");
 		}
@@ -180,10 +201,10 @@ public class DataExporter {
 			}
 		}
 		
-		ReplacementTable replacementTable = new ReplacementTable(resultTable);
-		replacementTable.addReplacementObject("creator", 1);
-		replacementTable.addReplacementObject("retired_by", 1);
-		replacementTable.addReplacementObject("changed_by", 1);
+		ColumnReplacementTable replacementTable = new ColumnReplacementTable(resultTable);
+		replacementTable.addReplacement("creator", 1);
+		replacementTable.addReplacement("retired_by", 1);
+		replacementTable.addReplacement("changed_by", 1);
 		
 		resultTable = replacementTable;
 		

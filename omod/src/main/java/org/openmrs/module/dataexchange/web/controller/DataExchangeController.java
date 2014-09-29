@@ -15,12 +15,15 @@ package org.openmrs.module.dataexchange.web.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.xml.sax.SAXException;
 
 /**
  * The main controller.
@@ -54,8 +58,18 @@ public class  DataExchangeController {
 	@Autowired
 	DataImporter dataImporter;
 	
+	@Autowired
+	MetadataSharingParser metadataSharingParser;
+	
 	@RequestMapping(value = "/export", method = RequestMethod.GET)
 	public void export() {
+	}
+	
+	@RequestMapping(value = "/exportPackageContent", method = RequestMethod.POST)
+	public ResponseEntity<String> exportPackageContent(@RequestParam("file") MultipartFile file) throws IOException, ParserConfigurationException, SAXException {
+		Set<Integer> conceptIds = metadataSharingParser.parseConceptIds(file.getInputStream());
+		
+		return exportConcepts(conceptIds);
 	}
 	
 	@RequestMapping(value = "/export", method = RequestMethod.POST)
@@ -70,7 +84,11 @@ public class  DataExchangeController {
 			}
 		}
 		
-		File tempFile = null;
+		return exportConcepts(ids);
+	}
+
+	private ResponseEntity<String> exportConcepts(Set<Integer> ids) throws IOException, FileNotFoundException {
+	    File tempFile = null;
 		FileInputStream tempIN = null;
 		String xml;
 		try {
@@ -98,7 +116,7 @@ public class  DataExchangeController {
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_XML);
 		return new ResponseEntity<String>(xml, responseHeaders, HttpStatus.CREATED);
-	}
+    }
 	
 	@RequestMapping(value = "/import", method = RequestMethod.GET)
 	public void importData() {

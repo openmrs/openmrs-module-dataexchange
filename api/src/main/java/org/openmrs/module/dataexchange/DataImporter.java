@@ -23,7 +23,7 @@ import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
-import org.hibernate.SessionFactory;
+import org.openmrs.api.db.hibernate.DbSessionFactory;  
 import org.openmrs.util.OpenmrsClassLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataImporter {
 
 	@Autowired
-	SessionFactory sessionFactory;
+	DbSessionFactory sessionFactory;
 	
 	@Transactional
 	public void importData(String filePath) {

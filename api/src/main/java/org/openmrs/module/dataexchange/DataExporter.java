@@ -34,7 +34,7 @@ import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.filter.DefaultColumnFilter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
-import org.hibernate.SessionFactory;
+import org.openmrs.api.db.hibernate.DbSessionFactory;  
 import org.openmrs.module.dataexchange.TableDefinition.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataExporter {
 	
 	@Autowired
-	SessionFactory sessionFactory;
+	DbSessionFactory sessionFactory;
 
 	@Transactional
 	public void exportConcepts(String filePath, Set<Integer> ids) throws IOException {

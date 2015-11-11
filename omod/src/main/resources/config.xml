@@ -15,6 +15,9 @@
 	<require_version>1.11.3, 1.10.2 - 1.10.*, 1.9.9 - 1.9.*</require_version>
 	<!-- / Module Properties -->
 
+	<aware_of_modules>
+	    <aware_of_module>org.openmrs.module.legacyui</aware_of_module>
+	</aware_of_modules>
 	
 	<!-- Module Activator -->
 	<activator>${project.parent.groupId}.${project.parent.artifactId}.DataExchangeActivator</activator>

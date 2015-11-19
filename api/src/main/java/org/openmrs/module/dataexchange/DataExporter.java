@@ -97,7 +97,7 @@ public class DataExporter {
 	@SuppressWarnings("deprecation")
 	private DatabaseConnection getConnection() {
 		try {
-			return new DatabaseConnection(sessionFactory.getCurrentSession().connection());
+			return new DatabaseConnection(sessionFactory.getHibernateSessionFactory().getCurrentSession().connection());
 		} catch (DatabaseUnitException e) {
 			throw new RuntimeException(e);
 		}

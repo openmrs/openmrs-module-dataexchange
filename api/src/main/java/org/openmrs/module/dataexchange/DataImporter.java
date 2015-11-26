@@ -16,6 +16,7 @@ package org.openmrs.module.dataexchange;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.Connection;
 
 import org.apache.commons.io.IOUtils;
 import org.dbunit.database.DatabaseConnection;
@@ -23,7 +24,8 @@ import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
-import org.openmrs.api.db.hibernate.DbSessionFactory;  
+import org.hibernate.jdbc.Work;
+import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.util.OpenmrsClassLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,8 +38,16 @@ public class DataImporter {
 	DbSessionFactory sessionFactory;
 	
 	@Transactional
-	public void importData(String filePath) {
-		DatabaseConnection connection = getConnection();
+	public void importData(final String filePath) {
+		sessionFactory.getCurrentSession().doWork(new Work() {
+			public void execute(Connection connection) {
+				importData(filePath, connection);
+			}
+		});
+	}
+
+	public void importData(String filePath, Connection con) {
+		DatabaseConnection connection = getConnection(con);
 		
 		InputStream in = OpenmrsClassLoader.getInstance().getResourceAsStream(filePath);
 		try {
@@ -65,9 +75,9 @@ public class DataImporter {
 	}
 
 	@SuppressWarnings("deprecation")
-	private DatabaseConnection getConnection() {
+	private DatabaseConnection getConnection(Connection con) {
 		try {
-			return new DatabaseConnection(sessionFactory.getCurrentSession().connection());
+			return new DatabaseConnection(con);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

@@ -16,6 +16,7 @@ package org.openmrs.module.dataexchange;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +35,8 @@ import org.dbunit.dataset.DataSetException;
 import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.filter.DefaultColumnFilter;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
-import org.openmrs.api.db.hibernate.DbSessionFactory;  
+import org.hibernate.jdbc.Work;
+import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.dataexchange.TableDefinition.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,8 +49,22 @@ public class DataExporter {
 	DbSessionFactory sessionFactory;
 
 	@Transactional
-	public void exportConcepts(String filePath, Set<Integer> ids) throws IOException {
-		DatabaseConnection connection = getConnection();
+	public void exportConcepts(final String filePath, final Set<Integer> ids) throws IOException {
+		
+		sessionFactory.getCurrentSession().doWork(new Work() {
+			public void execute(Connection connection) {
+				try {
+					exportConcepts(filePath, ids, connection);
+				} catch (IOException ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+		});
+	}
+	
+	
+	public void exportConcepts(String filePath, Set<Integer> ids, Connection con) throws IOException {
+		DatabaseConnection connection = getConnection(con);
 		
 		TableDefinition conceptTableDefinition = buildConceptTableDefinition();
 		
@@ -75,8 +91,20 @@ public class DataExporter {
 	}
 	
 	@Transactional
-	public void exportAllConcepts(String filePath) throws IOException {
-		DatabaseConnection connection = getConnection();
+	public void exportAllConcepts(final String filePath) throws IOException {
+		sessionFactory.getCurrentSession().doWork(new Work() {
+			public void execute(Connection connection) {
+				try {
+					exportAllConcepts(filePath, connection);
+				} catch (IOException ex) {
+					throw new RuntimeException(ex);
+				}
+			}
+		});
+	}
+	
+	public void exportAllConcepts(String filePath, Connection con) throws IOException {
+		DatabaseConnection connection = getConnection(con);
 		
 		Set<Integer> conceptIds = new LinkedHashSet<Integer>();
 		try {
@@ -95,9 +123,9 @@ public class DataExporter {
 	}
 	
 	@SuppressWarnings("deprecation")
-	private DatabaseConnection getConnection() {
+	private DatabaseConnection getConnection(Connection con) {
 		try {
-			return new DatabaseConnection(sessionFactory.getCurrentSession().connection());
+			return new DatabaseConnection(con);
 		} catch (DatabaseUnitException e) {
 			throw new RuntimeException(e);
 		}

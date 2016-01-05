@@ -18,6 +18,26 @@
 	<aware_of_modules>
 	    <aware_of_module>org.openmrs.module.legacyui</aware_of_module>
 	</aware_of_modules>
+
+	<conditionalResources>
+	
+	    <conditionalResource>
+	
+	        <path>/lib/dataexchange-api-1.9.*</path>
+	
+	        <openmrsVersion>1.9-1.11</openmrsVersion>
+	
+	    </conditionalResource>
+	
+	    <conditionalResource>
+	
+	        <path>/lib/dataexchange-api-2.0.*</path>
+	
+	        <openmrsVersion>2.0</openmrsVersion>
+	
+	    </conditionalResource>
+	
+	</conditionalResources>
 	
 	<!-- Module Activator -->
 	<activator>${project.parent.groupId}.${project.parent.artifactId}.DataExchangeActivator</activator>

@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.module.dataexchange.DataExporter;
 import org.openmrs.module.dataexchange.DataImporter;
+import org.openmrs.module.dataexchange.MetadataSharingParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -59,7 +60,7 @@ public class  DataExchangeController {
 	DataImporter dataImporter;
 	
 	@Autowired
-	MetadataSharingParser metadataSharingParser;
+    MetadataSharingParser metadataSharingParser;
 	
 	@RequestMapping(value = "/export", method = RequestMethod.GET)
 	public void export() {

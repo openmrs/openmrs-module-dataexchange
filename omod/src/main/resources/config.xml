@@ -34,6 +34,16 @@
 				
 	</mappingFiles>
 
+	<filter>
+		<filter-name>${project.parent.artifactId}DataExchangeAuthenticationFilter</filter-name>
+		<filter-class>${project.parent.groupId}.${project.parent.artifactId}.filter.DataExchangeAuthenticationFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>${project.parent.artifactId}DataExchangeAuthenticationFilter</filter-name>
+		<url-pattern>/module/dataexchange/*</url-pattern>
+	</filter-mapping>
+
 	<!-- Internationalization -->
 	<!-- All message codes should start with ${project.parent.artifactId}. -->
 	<messages>

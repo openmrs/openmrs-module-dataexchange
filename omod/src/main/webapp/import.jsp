@@ -3,6 +3,8 @@
 
 <%@ include file="template/localHeader.jsp"%>
 
+<openmrs:require privilege="Manage Concepts" otherwise="/login.htm" />
+
 <c:if test="${success}">
 <p><b>Import succeeded!</b></p>
 </c:if>

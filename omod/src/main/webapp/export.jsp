@@ -3,6 +3,8 @@
 
 <%@ include file="template/localHeader.jsp"%>
 
+<openmrs:require privilege="Manage Concepts" otherwise="/login.htm" />
+
 <form method="POST">
 Concept IDs to export: <input type="text" name="conceptIds" /> (put whitespace separated ids or leave empty to export all)
 

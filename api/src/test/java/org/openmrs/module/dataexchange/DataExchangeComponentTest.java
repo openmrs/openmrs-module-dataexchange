@@ -19,6 +19,7 @@ import java.util.HashSet;
 
 import org.junit.Test;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.openmrs.util.OpenmrsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class DataExchangeComponentTest extends BaseModuleContextSensitiveTest {
@@ -37,7 +38,9 @@ public class DataExchangeComponentTest extends BaseModuleContextSensitiveTest {
 			
 			dataExporter.exportConcepts(conceptsFile.getPath(), new HashSet<Integer>(Arrays.asList(23, 5089)));
 			
+			OpenmrsConstants.DATABASE_NAME = null;
 			dataImporter.importData(conceptsFile.getPath());
+			OpenmrsConstants.DATABASE_NAME = "openmrs";
 		} finally {
 			if (conceptsFile != null) {
 				conceptsFile.delete();

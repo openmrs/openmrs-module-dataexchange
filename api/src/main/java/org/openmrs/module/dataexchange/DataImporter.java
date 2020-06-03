@@ -17,16 +17,23 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.apache.commons.io.IOUtils;
+import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.DatabaseConnection;
+import org.dbunit.database.DefaultMetadataHandler;
 import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
+import org.dbunit.util.SQLHelper;
 import org.hibernate.jdbc.Work;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.util.OpenmrsClassLoader;
+import org.openmrs.util.OpenmrsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +55,7 @@ public class DataImporter {
 
 	public void importData(String filePath, Connection con) {
 		DatabaseConnection connection = getConnection(con);
+		connection.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER, new OpenmrsMetadataHandler());
 		
 		InputStream in = OpenmrsClassLoader.getInstance().getResourceAsStream(filePath);
 		try {
@@ -80,6 +88,28 @@ public class DataImporter {
 			return new DatabaseConnection(con);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}
+	}
+	
+	
+	public class OpenmrsMetadataHandler extends DefaultMetadataHandler {
+
+		@Override
+		public boolean tableExists(DatabaseMetaData databaseMetaData, String schemaName, String tableName) throws SQLException {
+			ResultSet tableRs = databaseMetaData.getTables(OpenmrsConstants.DATABASE_NAME, schemaName, tableName, null);
+	        try 
+	        {
+	            return tableRs.next();
+	        }
+	        finally
+	        {
+	            SQLHelper.close(tableRs);
+	        }
+		}
+
+		@Override
+		public ResultSet getTables(DatabaseMetaData databaseMetaData, String schemaName, String[] tableTypes) throws SQLException {
+			return databaseMetaData.getTables(OpenmrsConstants.DATABASE_NAME, schemaName, "%", tableTypes);
 		}
 	}
 }

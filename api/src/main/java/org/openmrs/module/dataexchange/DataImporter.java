@@ -55,7 +55,15 @@ public class DataImporter {
 
 	public void importData(String filePath, Connection con) {
 		DatabaseConnection connection = getConnection(con);
-		connection.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER, new OpenmrsMetadataHandler());
+
+		OpenmrsMetadataHandler metadataHandler;
+		try {
+			 metadataHandler = new OpenmrsMetadataHandler(con.getCatalog());
+		} catch (SQLException e) {
+			metadataHandler = new OpenmrsMetadataHandler(OpenmrsConstants.DATABASE_NAME);
+		}
+
+		connection.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER, metadataHandler);
 		
 		InputStream in = OpenmrsClassLoader.getInstance().getResourceAsStream(filePath);
 		try {
@@ -92,11 +100,17 @@ public class DataImporter {
 	}
 	
 	
-	public class OpenmrsMetadataHandler extends DefaultMetadataHandler {
+	public static class OpenmrsMetadataHandler extends DefaultMetadataHandler {
+
+		private final String catalogName;
+
+		public OpenmrsMetadataHandler(String catalogName) {
+			this.catalogName = catalogName;
+		}
 
 		@Override
 		public boolean tableExists(DatabaseMetaData databaseMetaData, String schemaName, String tableName) throws SQLException {
-			ResultSet tableRs = databaseMetaData.getTables(OpenmrsConstants.DATABASE_NAME, schemaName, tableName, null);
+			ResultSet tableRs = databaseMetaData.getTables(catalogName, schemaName, tableName, null);
 	        try 
 	        {
 	            return tableRs.next();
@@ -109,7 +123,7 @@ public class DataImporter {
 
 		@Override
 		public ResultSet getTables(DatabaseMetaData databaseMetaData, String schemaName, String[] tableTypes) throws SQLException {
-			return databaseMetaData.getTables(OpenmrsConstants.DATABASE_NAME, schemaName, "%", tableTypes);
+			return databaseMetaData.getTables(catalogName, schemaName, "%", tableTypes);
 		}
 	}
 }

@@ -4,7 +4,7 @@
 
 	<groupId>org.openmrs.module</groupId>
 	<artifactId>dataexchange</artifactId>
-	<version>1.3.5-SNAPSHOT</version>
+	<version>1.3.7-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Data Exchange Module</name>
 	<description>Enables exchanging data and metadata between OpenMRS installations</description>
